@@ -1,0 +1,84 @@
+az login
+az group create --name dataanalytics-prod-rg --location eastus
+az deployment group create --template-file main.bicep --resource-group dataanalytics-prod-rg
+
+
+Databricks Configuration:
+
+Create a cluster in Databricks workspace.
+
+Mount Data Lake Storage using ABFS driver:
+
+python
+Copy
+dbutils.fs.mount(
+  source = "abfss://<container>@<storage-account>.dfs.core.windows.net",
+  mount_point = "/mnt/data",
+  extra_configs = {"fs.azure.account.key.<storage-account>.dfs.core.windows.net": "<access-key>"})
+
+
+Synapse Pipeline:
+
+Create pipelines in Synapse Studio to ingest data from Data Lake.
+
+Use Synapse Spark notebooks for transformations.
+
+Key Architecture Notes
+RBAC: Service principals are granted least-privilege access using built-in roles.
+
+Security: Data Lake uses Azure AD authentication, Synapse leverages managed identities.
+
+Scalability: Synapse SQL pool scales on-demand, Databricks supports auto-scaling clusters.
+
+Cost Control: All resources include deletion protection and use consumption-based pricing.
+
+Visual Overview
+mermaid
+Copy
+graph TD
+    A[Raw Data] -->|Ingested via| B[Azure Data Lake]
+    B -->|Processed by| C[Azure Databricks]
+    C -->|Stores results in| B
+    B -->|Queried via| D[Azure Synapse]
+    D -->|Visualized in| E[Power BI]
+    E -->|Authentication| F[Azure AD Service Principal]
+
+
+    Run these commands in bash/PowerShell:
+
+bash
+Copy
+mkdir -p data-analytics-pipeline/modules
+
+# Create main file
+cat << EOF > data-analytics-pipeline/main.bicep
+$(cat << 'END'
+[PASTE MAIN.BICEP CONTENT FROM PREVIOUS ANSWER HERE]
+END
+)
+EOF
+
+# Create module files
+for module in storage databricks synapse powerbi; do
+  cat << EOF > data-analytics-pipeline/modules/${module}.bicep
+$(cat << 'END'
+[PASTE CORRESPONDING MODULE CONTENT FROM PREVIOUS ANSWER HERE]
+END
+)
+EOF
+done.
+
+Run deployment:
+
+bash
+Copy
+az login
+az deployment group create \
+  --template-file main.bicep \
+  --resource-group your-resource-group-name
+Important Notes
+Replace YOUR_POWERBI_SP_OBJECT_ID in main.bicep
+
+Use proper credentials instead of synapseadmin/P@ssw0rd123! in production
+
+Add networking rules if needed for private endpoints
